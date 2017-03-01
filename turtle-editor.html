@@ -1,0 +1,202 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TurtleEditor</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/codemirror.css" rel="stylesheet">
+    <link href="css/show-hint.css" rel="stylesheet">
+    <link href="css/jquery-ui.min.css" rel="stylesheet">
+    <link href="css/vis.css" rel="stylesheet">
+    <link href="css/split-pane.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+    <script src="js/config.js" defer></script>
+    <script data-main="turtle-editor" src="js/lib/require.js" defer></script>
+</head>
+
+<body>
+    <a href="https://github.com/EIS-Bonn/TurtleEditor"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+    
+    <section id="message-queue"></section>
+    <div class="container">
+        <header style="margin-top: 1em">
+            <table>
+                <tr>
+                    <td>
+                        <img src="img/te_logo.png" alt="logo" style="width: 90px" />
+                    </td>
+                    <td style="vertical-align: bottom;">
+                        <h1>TurtleEditor  </h1>
+                    </td>
+                </tr>
+            </table>
+            <div class="page-header">
+            </div>
+        </header>
+        <!--
+        <div class="row">
+            <div id="git-form" class="col-md-3">
+                <div class="form-group">
+                    <label for="input-username">Username (for login)</label>
+                    <input type="text" class="form-control" id="input-username" placeholder="Enter your username on GitHub">
+                </div>
+                <div class="form-group">
+                    <label for="input-password">Password or Token</label>
+                    <input type="password" class="form-control" id="input-password" placeholder="Password or Token">
+                </div>
+                <div class="form-group">
+                    <label for="input-owner">Owner of Repository</label>
+                    <input type="text" class="form-control" id="input-owner" placeholder="Owner's username on GitHub">
+                </div>
+                <div class="form-group">
+                    <label for="input-repo">Repository</label>
+                    <input type="text" class="form-control" id="input-repo" value="main">
+                </div>
+                <div class="form-group">
+                    <label for="input-branch">Branch</label>
+                    <input type="text" class="form-control" id="input-branch" value="master">
+                </div>
+                <div class="form-group">
+                    <label for="input-filename">Filename</label>
+                    <select class="form-control" id="input-file"></select>
+                </div>
+                <div class="form-group">
+                    <button type="button" id="button-load" class="btn btn-primary">Load Files</button>
+                    <button type="button" id="button-save" class="btn btn-primary">Save File</button>
+                </div>
+            </div>
+           -->
+            <!-- /.col-md-3 -->
+            <div id="network-popUp">
+                <span id="operation">node</span>
+                <br>
+                <p style="float: left; margin-top: 18px;">label</p>
+                <input id="label" title='Tip: In order to add a literal, include the text in quotes, e.g. "new"' value="new value" style="margin-bottom: 15px; margin-top: 15px;" />
+                <input type="button" value="save" id="saveButton" />
+                <input type="button" value="cancel" id="cancelButton" />
+            </div>
+            <div id="dialog" style="display:none">
+                <p>It is possible that some nodes will remain disconnected from the graph after deletion. Remove them too?</p>
+            </div>
+            <div id="back-div" style="display:none">
+                <button type="button" id="unsplit-button" class="button-style">Back</button>
+            </div>
+            <div id="tabs" class="col-md-9" style="visibility:hidden">
+                <ul id="tabs-list">
+                    <li><a href="#left-component">Graphical View</a></li>
+                    <li><a href="#right-component">Code View</a></li>
+                    <button type="button" id="split-button" class="button-style">Split view</button>
+                    <input type="checkbox" id="freeze" class="menu-checkbox" style="margin-top:8px">
+                    <label class="menu-label" title="Disable the physics of the network">Freeze</label>
+                    <input type="checkbox" id="hide-nodes" checked="checked" class="menu-checkbox" style="margin-top:8px">
+                    <label class="menu-label" title="Hide nodes from the RDF, RDFS and OWL vocabularies">Hide defaults</label>
+                    <!--<button type="button" id="freeze" class="button-style">Toggle freeze</button>
+                <button type="button" id="hide-nodes" class="button-style">Toggle defaults</button>-->
+                    <input type="image" id="decluster" src="img/minus.png" class="clustering-button" style="margin-right: 20px" />
+                    <input type="image" id="cluster" src="img/plus.png" class="clustering-button" style="margin-right: 10px" />
+                    <label class="menu-label">Clustering</label>
+                </ul>
+                <div id="left-component" class="split-pane-component"></div>
+                <div class="split-pane-divider" id="divider" style="visibility:hidden"></div>
+                <div id="right-component" class="split-pane-component">
+                    <div class="form-group">
+                        <label for="input-contents">Content editor: <span class="current-filename"></span></label>
+                        <textarea id="input-contents" placeholder="File content will appear here" rows="24" wrap="hard">@prefix mv: <http://eccenca.com/mobivoc/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix vCard:   <http://www.w3.org/2001/vcard-rdf/3.0#> .
+@prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#> .
+
+mv:Country
+	a rdfs:Class , owl:Class ;
+	rdfs:comment "A country is a region identified as a distinct entity in political geography." ;
+	rdfs:isDefinedBy <https://en.wikipedia.org/wiki/Country> ;
+	rdfs:label "Country"@en , "Land"@de .
+
+#Properties
+
+mv:hasFuelTransportationRegulation
+	a rdf:Property , owl:DatatypeProperty ;
+	rdfs:comment "Regulations existing in each country concerning the fuel transportation." ; 
+	rdfs:label "Fuel transportation regulation"@en , "Gas Verkehr Regulierung" @de ;
+	rdfs:domain mv:Country ; 
+	rdfs:range rdfs:Literal .
+	
+mv:hasNumberOfFuelStations
+	a rdf:Property , owl:DatatypeProperty ;
+	rdfs:comment "Represents the number of fuel stations in a specific country." ; 
+	rdfs:label "Number of fuel stations"@en , "Tankstelle Menge" @de ;
+	rdfs:domain mv:Country ; 
+	rdfs:range rdfs:integer .
+	
+mv:hasNumberOfChargingStations
+	a rdf:Property , owl:DatatypeProperty ;
+	rdfs:comment "Represents the number of charging stations in a specific country." ; 
+	rdfs:label "Number of charging stations"@en , "Ladestation Menge" @de ;
+	rdfs:domain mv:Country ; 
+rdfs:range rdfs:integer .
+                        </textarea>
+                    </div>
+                    <div id="syntax-check">
+                        <p id="syntax-check-failed" style="display: none">
+                            <img src="img/red_orb.png" alt="A red orb." class="status-icon">
+                            <span class="status">Syntax check failed.</span>
+                        </p>
+                        <p id="syntax-check-working" style="display: none">
+                            <img src="img/yellow_orb.png" alt="A yellow orb." class="status-icon">
+                            <span class="status">Syntax checker working.</span>
+                        </p>
+                        <p id="syntax-check-pending">
+                            <img src="img/yellow_orb.png" alt="A yellow orb." class="status-icon">
+                            <span class="status">Syntax check pending...</span>
+                        </p>
+                        <p id="syntax-check-off" style="display: none">
+                            <img src="img/yellow_orb.png" alt="A yellow orb." class="status-icon">
+                            <span class="status">Syntax checking is disabled. Click to enable.</span>
+                        </p>
+                        <p id="syntax-check-passed" style="display: none">
+                            <img src="img/green_orb.png" alt="A green orb." class="status-icon">
+                            <span class="status">Syntax check passed.</span>
+                        </p>
+                    </div>
+                    <!--
+                    <div class="form-group">
+                        <label for="input-message">Commit message</label>
+                        <input type="text" class="form-control" id="input-message" value="Turtle file edited, just for testing the editor.">
+                    </div>
+                    -->
+                </div>
+                <!-- /.col-md-9 -->
+            </div>
+        </div>
+        <!-- /.row -->
+        <hr>
+        <div class="row">
+            <div class="col-md-12">
+
+                <div class="help">
+                    
+                    <!--
+	            <h2>Further Information and Help</h2>
+	            <ul>
+		            <li>For a quick tour, leave the fields <em>Username</em> and <em>Password</em> blank and just click the <em>Load Files</em> button.</li>
+                    <li>Select individual files for viewing/editing in the field <em>Filename</em>.</li>
+                    <li>To use the autocomplete function, type <em>Ctrl+Space</em>.</li>
+                    <li>You need to provide your username and password only if you want to save the files after editing or if the repository is private.</li>
+                    <li>To authenticate with a GitHub personal access token, leave the fields <em>Username</em> empty and paste the token into the field <em>Password or Token</em>.</li>
+                </ul>
+              -->
+
+                    <div>Icons made by <a href="http://www.freepik.com" title="Freepik">Freepik</a> from <a href="http://www.flaticon.com" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0" target="_blank">CC 3.0 BY</a></div>
+                </div>
+            </div>
+        </div>
+        <!-- /.row -->
+    </div>
+    <!-- /.container -->
+</body>
+
+</html>
